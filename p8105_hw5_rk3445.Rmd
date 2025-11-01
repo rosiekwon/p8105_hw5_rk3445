@@ -67,9 +67,8 @@ sim_results |>
   ggplot(aes(x = group_size, y = prob_shared)) +
   geom_point(size = 1, alpha = 0.3) + 
   geom_line(color = "darkorange", size = 1, alpha = 0.5) + 
-  scale_y_continuous(labels = scales::percent_format()) + 
   labs(
-    title = "Birthday Problem Simulation",
+    title = "Probability that at least two people share a birthday",
     x = "Group Size",
     y = "Probability of Shared Birthday"
   ) +
@@ -77,8 +76,9 @@ sim_results |>
   theme(
     plot.title = element_text(face = "bold")
   )
-  
 ```
+
+The plot shows the probability of at least two people sharing a birthday with group sizes ranging from 2 to 50. We observe that the probability is close to zero at small group sizes but increases rapidly between group sizes of 10 and 30. Beyond that, the slope of the curve begins to slow and after group size of 40 the probability approaches 1.0 , meaning that almost every group of more than 40 people will have at least two individuals sharing a birthday.
 
 
 
