@@ -1,0 +1,45 @@
+---
+title: "p8105_hw5_rk3445"
+author: "Rosie Kwon"
+date: "2025-11-01"
+output: html_document
+---
+
+```{r, include = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Problem 1
+
+A function that checks whether there are duplicate birthdays in the group
+```{r}
+duplicate_birthday <- function(n, num_days = 365) {
+  birthdays <- sample(0:(num_days - 1), n, replace = TRUE)
+  if (length(birthdays) != length(unique(birthdays))) {
+    return(TRUE)   
+  } else {
+    return(FALSE)  
+  }
+}
+```
+
+Next, run this function 10000 times for each group size between 2 and 50. For each group size, compute the probability that at least two people in the group will share a birthday by averaging across the 10000 simulation runs. Make a plot showing the probability as a function of group size, and comment on your results.
+
