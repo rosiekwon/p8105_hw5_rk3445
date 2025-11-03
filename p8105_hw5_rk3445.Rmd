@@ -32,40 +32,39 @@ scale_fill_discrete = scale_fill_viridis_d
 
 A function that checks whether there are duplicate birthdays in the group
 ```{r}
-duplicate_birthday <- function(n, num_days = 365) {
-  birthdays <- sample(0:(num_days - 1), n, replace = TRUE)
-  if (length(birthdays) != length(unique(birthdays))) {
-    return(TRUE)   
-  } else {
-    return(FALSE)  
-  }
+duplicate_birthday = function(n) {
+  birthdays = sample(1:365, n, replace = TRUE)
+  
+  repeated_bday = length(unique(birthdays)) < n
+  
+  repeated_bday
 }
 ```
 
 run this function 10000 times for each group size between 2 and 50. 
 ```{r}
-output = vector("list", length = 50)
-
-for(i in 2:50){
-  output[[i]] =
-    rerun(10000, duplicate_birthday(i, num_days = 365)) |> 
-    unlist()
-}
-
 #For each group size, compute the probability that at least two people in the group will share a birthday by averaging across the 10000 simulation runs.
 sim_results =
-  tibble(
-    group_size = 2:50,
-    prob_shared = map_dbl(output[2:50], mean)
-)
-
+  expand_grid(
+    bdays = 2:50,
+    iter = 1:10000
+  ) |> 
+  mutate(
+    result = map_lgl(bdays, duplicate_birthday)
+  ) |> 
+  group_by(
+    bdays
+  ) |> 
+  summarize(
+    prob_repeat = mean(result)
+  )
 ```
 
 A plot showing the probability as a function of group size
 ```{r}
 sim_results |>
-  ggplot(aes(x = group_size, y = prob_shared)) +
-  geom_point(size = 1, alpha = 0.3) + 
+  ggplot(aes(x = bdays, y = prob_repeat)) +
+  geom_point(size = 1) + 
   geom_line(color = "darkorange", size = 1, alpha = 0.5) + 
   labs(
     title = "Probability that at least two people share a birthday",
@@ -78,7 +77,59 @@ sim_results |>
   )
 ```
 
-The plot shows the probability of at least two people sharing a birthday with group sizes ranging from 2 to 50. We observe that the probability is close to zero at small group sizes but increases rapidly between group sizes of 10 and 30. Beyond that, the slope of the curve begins to slow and after group size of 40 the probability approaches 1.0 , meaning that almost every group of more than 40 people will have at least two individuals sharing a birthday.
+The plot shows the probability of at least two people sharing a birthday with group sizes ranging from 2 to 50. We observe that the probability is close to zero at small group sizes but increases rapidly between group sizes of 10 and 30. Beyond that, the slope of the curve begins to slow and after group size of 45 the probability approaches 1.0 , meaning that almost every group of more than 40 people will have at least two individuals sharing a birthday.
 
 
+
+## Problem 2
+
+simulation to explore power in a one-sample t-test.
+
+Generate 5000 datasets from the normal distribution 
+```{r}
+sim_mean_sd = function(samp_size = 30, mu = 0 , sigma = 5){
+  sim_df = 
+    tibble(
+      x = rnorm(n = samp_size, mean = mu, sd = sigma)
+    )
+  sim_df
+}
+
+sim_results =
+  rerun(5000,sim_mean_sd(30,0,5)) |> 
+  bind_rows()
+
+
+```
+
+
+```{r}
+sim_mean_sd = function(samp_size = 30, mu = 0 , sigma = 5){
+  x = rnorm(n = samp_size, mean = mu, sd = sigma)
+  x
+  x_mean = mean(x)
+}
+
+sim_results =
+  rerun(5000,sim_mean_sd(30,0,5)) 
+```
+
+
+For each dataset, save 𝜇̂ 
+ and the p-value arising from a test of 𝐻:𝜇=0
+ using 𝛼=0.05
+. Hint: to obtain the estimate and p-value, use broom::tidy to clean the output of t.test.
+
+Repeat the above for 𝜇={1,2,3,4,5,6}
+, and complete the following:
+
+Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of 𝜇
+ on the x axis. Describe the association between effect size and power.
+Make a plot showing the average estimate of 𝜇̂ 
+ on the y axis and the true value of 𝜇
+ on the x axis. Make a second plot (or overlay on the first) the average estimate of 𝜇̂ 
+ only in samples for which the null was rejected on the y axis and the true value of 𝜇
+ on the x axis. Is the sample average of 𝜇̂ 
+ across tests for which the null is rejected approximately equal to the true value of 𝜇
+? Why or why not?
 
