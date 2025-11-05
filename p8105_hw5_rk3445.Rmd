@@ -83,53 +83,97 @@ The plot shows the probability of at least two people sharing a birthday with gr
 
 ## Problem 2
 
-simulation to explore power in a one-sample t-test.
+Define simulation function
 
-Generate 5000 datasets from the normal distribution 
 ```{r}
-sim_mean_sd = function(samp_size = 30, mu = 0 , sigma = 5){
-  sim_df = 
-    tibble(
-      x = rnorm(n = samp_size, mean = mu, sd = sigma)
-    )
-  sim_df
+sim_t_test = function(samp_size = 30, mu = 0, sigma = 5, alpha = 0.05){
+  
+  results = 
+    map(1:5000, ~ rnorm(n = samp_size, mean = mu, sd = sigma)) |> 
+    map(~ t.test(.x, mu = 0)) |> 
+    map_df(~ broom::tidy(.x)) |> 
+    select(estimate, p.value) |> 
+    mutate(reject_null = p.value < alpha)
+  
+  return(results)
 }
-
-sim_results =
-  rerun(5000,sim_mean_sd(30,0,5)) |> 
-  bind_rows()
-
-
 ```
 
 
-```{r}
-sim_mean_sd = function(samp_size = 30, mu = 0 , sigma = 5){
-  x = rnorm(n = samp_size, mean = mu, sd = sigma)
-  x
-  x_mean = mean(x)
-}
+Run simulation for true means from 0 to 6
 
-sim_results =
-  rerun(5000,sim_mean_sd(30,0,5)) 
+```{r}
+t_test_results =
+  expand_grid(mu = 0:6) |> 
+  mutate(result = map(mu, ~ sim_t_test(mu = .x))) |> 
+  unnest()
 ```
 
+**Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of 𝜇 on the x axis. Describe the association between effect size and power.**
 
-For each dataset, save 𝜇̂ 
- and the p-value arising from a test of 𝐻:𝜇=0
- using 𝛼=0.05
-. Hint: to obtain the estimate and p-value, use broom::tidy to clean the output of t.test.
+```{r}
+power_results = 
+t_test_results |> 
+  group_by(mu) |> 
+  summarize(
+    proportion = mean(reject_null)
+  )
+```
 
-Repeat the above for 𝜇={1,2,3,4,5,6}
-, and complete the following:
+```{r}
+power_results |> 
+  ggplot(aes(x = mu, y = proportion)) +
+  geom_line(color = "blue", linewidth = 1.2) +
+  geom_point(size = 2, color = "darkblue") +
+  scale_x_continuous(breaks = 0:6) +
+  labs(
+    title = "Power Curve of One-Sample t-test",
+    x = expression("True mean ("*mu*")"),
+    y = "Proportion rejected (Power)"
+  ) +
+  theme_minimal(base_size = 12)
+```
 
-Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of 𝜇
- on the x axis. Describe the association between effect size and power.
-Make a plot showing the average estimate of 𝜇̂ 
- on the y axis and the true value of 𝜇
- on the x axis. Make a second plot (or overlay on the first) the average estimate of 𝜇̂ 
- only in samples for which the null was rejected on the y axis and the true value of 𝜇
- on the x axis. Is the sample average of 𝜇̂ 
- across tests for which the null is rejected approximately equal to the true value of 𝜇
-? Why or why not?
+When μ = 0, the null hypothesis is true so that the test rejects the null about 5% of the time, matching with α = 0.05 significance level. As μ increases, the effect size grows, the test becomes more sensitive and more likely to reject the null hypothesis. Therefore, the power (probability of rejecting null hypothesis) increases approaching 1 as effect size increases.
+
+
+
+**Make a plot showing the average estimate of 𝜇̂ on the y axis and the true value of 𝜇on the x axis. Make a second plot (or overlay on the first) the average estimate of 𝜇̂ only in samples for which the null was rejected on the y axis and the true value of 𝜇 on the x axis.**
+
+Compute the averages
+
+```{r}
+avg_estimates =
+  t_test_results |>
+  group_by(mu) |>
+  summarize(
+    mean_est_all = mean(estimate),
+    mean_est_reject = mean(estimate[reject_null]),
+    .groups = "drop"
+  )
+```
+ 
+
+```{r}
+avg_estimates |>
+  ggplot(aes(x = mu)) +
+  geom_line(aes(y = mean_est_all, color = "All samples")) +
+  geom_point(aes(y = mean_est_all, color = "All samples"), size = 1.5) +
+  geom_line(aes(y = mean_est_reject, color = "Null rejected"), linetype = "dashed") +
+  geom_point(aes(y = mean_est_reject, color = "Null rejected"), size = 1.5) +
+  scale_color_manual(values = c("All samples" = "blue", "Null rejected" = "red")) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  scale_x_continuous(breaks = 0:6) +
+  labs(
+    title = "Average Estimate of μ̂ by True Mean (μ)",
+    x = expression("True mean ("*mu*")"),
+    y = expression("Average estimate ("*hat(mu)*")"),
+    color = "Condition"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
+
+```
+
+**Is the sample average of 𝜇̂ across tests for which the null is rejected approximately equal to the true value of 𝜇? Why or why not? **
 
