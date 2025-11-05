@@ -123,7 +123,7 @@ t_test_results |>
 ```{r}
 power_results |> 
   ggplot(aes(x = mu, y = proportion)) +
-  geom_line(color = "blue", linewidth = 1.2) +
+  geom_line(color = "blue", linewidth = 1) +
   geom_point(size = 2, color = "darkblue") +
   scale_x_continuous(breaks = 0:6) +
   labs(
@@ -177,3 +177,4 @@ avg_estimates |>
 
 **Is the sample average of 𝜇̂ across tests for which the null is rejected approximately equal to the true value of 𝜇? Why or why not? **
 
+The plot compares the average estimate of 𝜇̂ across all samples with the average estimate computed only from samples where the null hypothesis was rejected. The sample average estimates for all samples are close to the true mean 𝜇, showing that the estimator is unbiased. However, the sample average of 𝜇̂ for which the null is rejected is higher than the true mean especially for small effect sizes. From when 𝜇 is 5, the estimate value is approximately equal to the true mean. This is because we are conditioning on significance, so only samples with unusually large sample means (far from 0) tend to appear among the rejected cases.
