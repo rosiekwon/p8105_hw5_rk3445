@@ -178,3 +178,50 @@ avg_estimates |>
 **Is the sample average of 𝜇̂ across tests for which the null is rejected approximately equal to the true value of 𝜇? Why or why not? **
 
 The plot compares the average estimate of 𝜇̂ across all samples with the average estimate computed only from samples where the null hypothesis was rejected. The sample average estimates for all samples are close to the true mean 𝜇, showing that the estimator is unbiased. However, the sample average of 𝜇̂ for which the null is rejected is higher than the true mean especially for small effect sizes. From when 𝜇 is 5, the estimate value is approximately equal to the true mean. This is because we are conditioning on significance, so only samples with unusually large sample means (far from 0) tend to appear among the rejected cases.
+
+
+# Problem 3
+
+Load the dataset
+```{r, message= FALSE}
+homicides = 
+  read_csv("data/homicide-data.csv") |> 
+  janitor::clean_names() |> 
+  mutate(
+    city_state = paste(city , state, sep = ", "),
+    solve_status = case_match(
+      disposition,
+      "Closed without arrest" ~ 1,
+      "Open/No arrest" ~ 1,
+      "Closed by arrest" ~ 0
+    )
+  ) 
+```
+
+The dataset from Washington Post homicide data contains information about murders in U.S. cities, including:
+
+- `uid`: unique identifier for each case
+
+- `victim_last`, `victim_first`: victim’s name
+
+- `victim_age`, `victim_sex`, `victim_race`: demographics of victims
+
+- `city`, `state`: location
+
+- `disposition`: whether the case was solved or not
+
+
+```{r}
+#Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+homicides |> 
+  group_by(city) |> 
+  summarize(
+    num_homicides = n(),
+    unsolved = sum(solve_status, na.rm = TRUE) 
+  ) |> 
+  arrange(desc(num_homicides)) |> 
+  knitr::kable()
+```
+
+
+
