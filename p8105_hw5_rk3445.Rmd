@@ -210,6 +210,8 @@ The dataset from Washington Post homicide data contains information about murder
 
 - `disposition`: whether the case was solved or not
 
+Dataset includes a total of `r nrow(homicides)` observations and `r ncol(homicides)` variables.
+
 
 ```{r}
 #Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
@@ -222,6 +224,72 @@ homicides |>
   arrange(desc(num_homicides)) |> 
   knitr::kable()
 ```
+
+Estimate the proportion of homicides that are unsolved for the city of Baltimore, MD
+
+```{r}
+homicides |> 
+  filter(
+    city_state == "Baltimore, MD"
+  ) |>
+  summarize(
+    unsolved = sum(solve_status, na.rm = TRUE),
+    total = n()
+  ) |> 
+  with(prop.test(x = unsolved, n = total)) |> 
+  broom::tidy() |> 
+  select(estimate, conf.low, conf.high) |> 
+  knitr::kable()
+```
+
+
+Proportion of unsolved homicides and the confidence interval for each cities.
+
+```{r}
+city_summary =
+  homicides |> 
+  group_by(city) |> 
+  summarize(
+    unsolved = sum(solve_status, na.rm = TRUE),
+    total = n(),
+    .groups = "drop"
+  )
+
+
+city_prop = 
+  city_summary |> 
+  mutate(
+    test = map2(unsolved, total, ~ prop.test(x = .x, n = .y, correct = FALSE))
+  ) |> 
+  mutate(tidy_test = map(test, broom::tidy)) |> 
+  select(city, tidy_test) |> 
+  unnest(tidy_test) |> 
+  select(city, estimate, conf.low, conf.high) |> 
+  arrange(estimate) 
+
+knitr::kable(city_prop)  
+```
+
+
+Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides.
+
+```{r}
+city_prop |> 
+  mutate(city = factor(city, levels = city)) |> 
+  ggplot(aes(x = city, y = estimate)) +
+  geom_point(color = "blue", size = 1) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
+  labs(
+    x = "City",
+    y = "Proportion of Unsolved Homicides",
+    title = "Estimated Proportion of Unsolved Homicides by City"
+  ) +  
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 1)
+  )
+```
+
 
 
 
