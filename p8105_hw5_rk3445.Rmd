@@ -271,9 +271,9 @@ knitr::kable(city_prop)
 ```
 
 
-Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides.
+Create a plot that shows the estimates and CIs for each city 
 
-```{r}
+```{r, fig.width=10}
 city_prop |> 
   mutate(city = factor(city, levels = city)) |> 
   ggplot(aes(x = city, y = estimate)) +
@@ -290,6 +290,4 @@ city_prop |>
   )
 ```
 
-
-
-
+The plot shows how large a share of homicides remain unsolved in major cities in the US. Richmond, Charlotte, and Memphis appear on the left with the lowest proportions while Chicago has the highest proportions (over 70%) indicating a much larger share of unsolved homicide cases in Chicago.
